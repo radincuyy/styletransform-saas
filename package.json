@@ -1,0 +1,33 @@
+{
+  "name": "style-transform-saas",
+  "version": "1.0.0",
+  "description": "SaaS platform for AI-powered style transformation",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm start",
+    "build": "cd frontend && npm run build",
+    "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "setup": "node scripts/setup.js",
+    "deploy": "node scripts/deploy.js",
+    "test": "cd frontend && npm test && cd ../backend && npm test"
+  },
+  "keywords": [
+    "saas",
+    "ai",
+    "style",
+    "transformation",
+    "react",
+    "nodejs"
+  ],
+  "author": "Radincuyy",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "firebase": "^11.10.0",
+    "replicate": "^1.0.1"
+  }
+}
