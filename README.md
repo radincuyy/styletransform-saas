@@ -1,223 +1,124 @@
-# StyleTransform SaaS
+# StyleTransform AI
 
-AI-powered image generation platform with two specialized services: **Text-to-Image** generation and **Image-to-Image** transformation.
-
-## 🎨 Services
-
-### 1. Text-to-Image Generator
-- Generate stunning images from text descriptions
-- Perfect for character references and creative concepts
-- Multiple AI models available (Flux, Turbo, Realism, Anime)
-- Customizable dimensions and style presets
-
-### 2. Image-to-Image Editor  
-- Transform existing images with AI
-- Change styles, colors, backgrounds, clothing
-- Upload your photo and describe desired changes
-- Before/after comparison view
+Transform your images with the power of artificial intelligence. Create stunning visuals from text descriptions or transform existing photos with advanced AI models.
 
 ## ✨ Features
 
-- **100% FREE Tier**: Uses Pollinations AI (no API key required)
-- **Multi-tier Fallback**: Automatic fallback to ensure service availability
-- **User Authentication**: Secure Firebase authentication
-- **Usage Tracking**: Generation limits and statistics
-- **Responsive Design**: Mobile-first design that works everywhere
-- **Real-time Processing**: Fast image generation with progress feedback
-- **Download Support**: High-quality image downloads
-
-## 🛠 Tech Stack
-
-### Frontend
-- React 18 with Hooks
-- Tailwind CSS for styling
-- Firebase Authentication
-- React Router for navigation
-- Lazy loading and code splitting
-- PWA features
-
-### Backend
-- Node.js & Express
-- Firebase Admin SDK
-- Cloudinary for image storage
-- Multiple AI providers with fallback system
-- Rate limiting and security middleware
-- Analytics and monitoring
-
-### AI Providers
-- **Pollinations AI** (Primary - FREE)
-- **Prodia AI** (Fallback - FREE tier)
-- **Replicate API** (Premium - Paid)
+- **Text-to-Image Generation**: Create unique images from detailed text descriptions
+- **Image-to-Image Transformation**: Transform existing photos with AI-powered style transfer
+- **Professional Style Presets**: 24+ carefully curated presets for different artistic styles
+- **User Authentication**: Secure login with Firebase Authentication
+- **Cloud Storage**: Reliable image storage with Cloudinary integration
+- **Progressive Web App**: Install on mobile devices and work offline
+- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 16+
-- Firebase project
-- Cloudinary account (optional)
 
-### Quick Setup
+- Node.js (v16 or higher)
+- npm (v8 or higher)
+- Firebase account
+- Cloudinary account
 
-1. **Clone and Install**
-```bash
-git clone <repository-url>
-cd style-transform-saas
-npm install
-cd backend && npm install
-cd ../frontend && npm install
-```
+### Installation
 
-2. **Environment Setup**
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/radincuyy/styletransform-saas.git
+   cd styletransform-saas
+   ```
 
-**Backend `.env`:**
-```env
-NODE_ENV=development
-PORT=5000
-FRONTEND_URL=http://localhost:3000
+2. **Install dependencies**
+   ```bash
+   npm run install-all
+   ```
 
-# Firebase (Required)
-FIREBASE_PROJECT_ID=your-project-id
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-FIREBASE_CLIENT_EMAIL=your-service-account@your-project.iam.gserviceaccount.com
+3. **Environment Setup**
+   
+   Create `.env` files in the root, frontend, and backend directories using the provided examples:
+   ```bash
+   cp .env.example .env
+   cp frontend/.env.example frontend/.env
+   cp backend/.env.example backend/.env
+   ```
 
-# Cloudinary (Optional - for image storage)
-CLOUDINARY_CLOUD_NAME=your-cloud-name
-CLOUDINARY_API_KEY=your-api-key
-CLOUDINARY_API_SECRET=your-api-secret
+4. **Configure your environment variables**
+   - Firebase configuration
+   - Cloudinary credentials
+   - AI service API keys
 
-# AI Providers (Optional - for premium features)
-REPLICATE_API_TOKEN=your-replicate-token
-PRODIA_API_KEY=your-prodia-key
-POLLINATIONS_API_TOKEN=your-pollinations-token
-```
+5. **Start the development server**
+   ```bash
+   npm run dev
+   ```
 
-**Frontend `.env`:**
-```env
-REACT_APP_FIREBASE_API_KEY=your-firebase-api-key
-REACT_APP_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-REACT_APP_FIREBASE_PROJECT_ID=your-project-id
-REACT_APP_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
-REACT_APP_FIREBASE_APP_ID=your-app-id
-REACT_APP_API_URL=http://localhost:5000
-```
+   The application will be available at:
+   - Frontend: http://localhost:3000
+   - Backend: http://localhost:5000
 
-3. **Start Development**
-```bash
-# Backend (port 5000)
-cd backend && npm run dev
+## 🛠️ Technology Stack
 
-# Frontend (port 3000)  
-cd frontend && npm start
-```
+### Frontend
+- **React** - Modern JavaScript library for building user interfaces
+- **Tailwind CSS** - Utility-first CSS framework
+- **Firebase Auth** - Authentication and user management
+- **React Router** - Client-side routing
+- **Framer Motion** - Animation library
 
-## 📡 API Endpoints
+### Backend
+- **Node.js** - JavaScript runtime environment
+- **Express.js** - Web application framework
+- **Firebase Admin** - Server-side Firebase integration
+- **Cloudinary** - Image and video management
+- **Stripe** - Payment processing
 
-### Image Generation
-- `POST /api/generate/text-to-image` - Generate from text prompt
-- `POST /api/generate/image-to-image` - Transform uploaded image
-- `GET /api/generate/history` - Get generation history
+### AI Services
+- **Pollinations AI** - Primary image generation service
+- **Replicate** - Alternative AI model hosting
+- **Prodia** - Additional AI image processing
 
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `GET /api/auth/profile` - Get user profile
-
-### User Management
-- `GET /api/user/stats` - Get usage statistics
-- `PUT /api/user/profile` - Update profile
-
-## 🏗 Architecture
-
-```
-├── frontend/                 # React application
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── TextToImage.js    # Text-to-image service
-│   │   │   ├── ImageToImage.js   # Image-to-image service
-│   │   │   └── Dashboard.js      # Overview dashboard
-│   │   ├── components/           # Reusable components
-│   │   └── utils/               # Utilities and helpers
-│   
-├── backend/                  # Express API server
-│   ├── routes/
-│   │   └── generate.js          # Generation endpoints
-│   ├── utils/
-│   │   ├── pollinationsAI.js    # Primary AI provider
-│   │   └── prodiaAI.js          # Fallback AI provider
-│   └── middleware/              # Auth and security
-```
-
-## 🎯 Usage Examples
+## 📱 Usage
 
 ### Text-to-Image
-```javascript
-// Generate from text description
-const response = await api.post('/generate/text-to-image', {
-  prompt: 'a beautiful anime character with blue hair',
-  stylePreset: 'Modern Casual',
-  model: 'flux',
-  width: 512,
-  height: 512
-});
-```
+1. Navigate to the Text-to-Image page
+2. Enter a detailed description of the image you want to create
+3. Select a style preset or use custom settings
+4. Click "Generate" and wait for your AI-created image
 
 ### Image-to-Image
-```javascript
-// Transform uploaded image
-const formData = new FormData();
-formData.append('mainImage', imageFile);
-formData.append('prompt', 'change hair color to blonde');
-formData.append('stylePreset', 'Vintage Chic');
-
-const response = await api.post('/generate/image-to-image', formData);
-```
-
-## 🔧 Testing
-
-```bash
-# Test system components
-cd backend && node test-system.js
-
-# Check all services
-npm run test
-```
+1. Go to the Image-to-Image page
+2. Upload your source image
+3. Describe the transformation you want
+4. Choose a style preset
+5. Generate your transformed image
 
 ## 🚀 Deployment
 
-### Backend (Heroku/Railway)
-```bash
-# Set environment variables
-# Deploy using Git
-git push heroku main
-```
+### Frontend (Vercel)
+1. Connect your GitHub repository to Vercel
+2. Set environment variables in Vercel dashboard
+3. Deploy automatically on push to main branch
 
-### Frontend (Vercel/Netlify)
-```bash
-# Build and deploy
-npm run build
-# Deploy dist folder
-```
-
-## 📊 Monitoring
-
-- Built-in analytics tracking
-- Usage statistics dashboard
-- Error monitoring and logging
-- Performance metrics
+### Backend (Railway/Heroku)
+1. Create a new app on your preferred platform
+2. Connect your repository
+3. Set environment variables
+4. Deploy the backend service
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
+We welcome contributions! Please feel free to submit a Pull Request.
 
 ## 📄 License
 
-MIT License - see LICENSE file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Thanks to the open-source community for the amazing tools and libraries
+- Special thanks to the AI service providers for making this technology accessible
 
 ---
 
-**Built with ❤️ for creative professionals and AI enthusiasts**
+Made with ❤️ by [Radincuyy](https://github.com/radincuyy)

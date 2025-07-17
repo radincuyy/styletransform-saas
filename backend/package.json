@@ -1,7 +1,7 @@
 {
-  "name": "style-transform-backend",
+  "name": "styletransform-api",
   "version": "1.0.0",
-  "description": "Backend API for Style Transform SaaS",
+  "description": "AI-powered image transformation API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -25,11 +25,15 @@
     "nodemon": "^3.0.1"
   },
   "keywords": [
+    "ai",
+    "image-processing",
     "api",
     "nodejs",
-    "express",
-    "saas"
+    "express"
   ],
-  "author": "Your Name",
-  "license": "MIT"
+  "author": "Radincuyy",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  }
 }

@@ -1,7 +1,8 @@
 {
-  "name": "style-transform-frontend",
-  "version": "0.1.0",
+  "name": "styletransform-web",
+  "version": "1.0.0",
   "private": true,
+  "homepage": ".",
   "dependencies": {
     "@react-spring/web": "^10.0.1",
     "@stripe/react-stripe-js": "^2.1.1",
