@@ -10,17 +10,32 @@ try {
   console.log('- PRIVATE_KEY:', process.env.FIREBASE_PRIVATE_KEY ? 'Set ✅' : 'Missing ❌');
 
   if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
-    // Clean and format private key
+    // Clean and format private key with multiple approaches
     let privateKey = process.env.FIREBASE_PRIVATE_KEY;
     
-    // Handle different private key formats
-    if (privateKey.includes('\\n')) {
-      privateKey = privateKey.replace(/\\n/g, '\n');
-    }
+    console.log('🔑 Original private key length:', privateKey ? privateKey.length : 0);
+    console.log('🔑 Private key starts with:', privateKey ? privateKey.substring(0, 50) + '...' : 'undefined');
     
-    // Ensure proper formatting
-    if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
-      console.warn('⚠️ Private key might be malformed');
+    // Handle different private key formats
+    if (privateKey) {
+      // Replace literal \n with actual newlines
+      if (privateKey.includes('\\n')) {
+        privateKey = privateKey.replace(/\\n/g, '\n');
+        console.log('🔧 Replaced \\n with newlines');
+      }
+      
+      // Ensure proper header/footer
+      if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+        console.warn('⚠️ Private key missing BEGIN header');
+      }
+      if (!privateKey.includes('-----END PRIVATE KEY-----')) {
+        console.warn('⚠️ Private key missing END footer');
+      }
+      
+      console.log('🔑 Processed private key length:', privateKey.length);
+      console.log('🔑 Has proper format:', privateKey.includes('-----BEGIN PRIVATE KEY-----') && privateKey.includes('-----END PRIVATE KEY-----'));
+    } else {
+      console.error('❌ Private key is undefined or empty');
     }
 
     const serviceAccount = {
