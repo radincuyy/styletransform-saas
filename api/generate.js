@@ -77,25 +77,51 @@ export default async function handler(req, res) {
         }
         
         console.log('🔄 Generating image-to-image...');
-        console.log('📷 Input image:', imageUrl);
+        console.log('📷 Input image:', imageUrl.substring(0, 100) + '...');
         
-        // For now, fallback to text-to-image with enhanced prompt
-        const enhancedPrompt = `${prompt}, based on uploaded image, high quality, detailed`;
+        // First, upload input image to Cloudinary to get a public URL
+        let inputImageUrl = imageUrl;
+        
+        try {
+          console.log('☁️ Uploading input image to Cloudinary...');
+          const cloudinary = require('../backend/config/cloudinary');
+          
+          if (process.env.CLOUDINARY_CLOUD_NAME) {
+            const uploadResult = await cloudinary.uploader.upload(imageUrl, {
+              folder: 'styletransform/inputs',
+              public_id: `input_${userId}_${Date.now()}`,
+              transformation: [
+                { quality: 'auto' },
+                { fetch_format: 'auto' }
+              ]
+            });
+            
+            inputImageUrl = uploadResult.secure_url;
+            console.log('✅ Input image uploaded to Cloudinary:', inputImageUrl);
+          } else {
+            console.log('⚠️ Cloudinary not configured, using base64 directly');
+          }
+        } catch (uploadError) {
+          console.warn('⚠️ Input image upload failed, using base64:', uploadError.message);
+          // Continue with base64 if Cloudinary fails
+        }
+        
+        // Use Kontext model for image-to-image with proper parameters
+        const enhancedPrompt = `${prompt}, high quality, detailed, professional`;
         const width = settings.width || 512;
         const height = settings.height || 512;
         const seed = Math.floor(Math.random() * 1000000);
         
         const params = new URLSearchParams({
+          model: 'kontext',
+          image: inputImageUrl,
           width: width.toString(),
           height: height.toString(),
-          model: 'flux',
-          enhance: 'true',
-          nologo: 'true',
           seed: seed.toString()
         });
         
         generatedImageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?${params}`;
-        console.log('🔗 Generated image URL:', generatedImageUrl);
+        console.log('🔗 Generated image URL with Kontext model:', generatedImageUrl);
         
       } else {
         console.log('❌ Invalid generation type:', type);
