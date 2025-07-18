@@ -1,3 +1,7 @@
+// Load environment variables first for serverless functions
+require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
+
 const admin = require('firebase-admin');
 const path = require('path');
 const fs = require('fs');

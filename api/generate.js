@@ -1,5 +1,7 @@
-// Load environment variables
-require('dotenv').config();
+// Load environment variables for Vercel serverless functions
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 const { db, auth } = require('../backend/config/firebase');
 const pollinationsAI = require('../backend/utils/pollinationsAI');
