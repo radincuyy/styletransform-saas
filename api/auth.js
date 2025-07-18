@@ -1,7 +1,4 @@
-// Load environment variables for Vercel serverless functions
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
+// Environment variables are automatically available in Vercel serverless functions
 
 const { auth } = require('../backend/config/firebase');
 

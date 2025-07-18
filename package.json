@@ -21,6 +21,12 @@
   ],
   "author": "Radincuyy",
   "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "firebase-admin": "^11.10.1",
+    "axios": "^1.5.0",
+    "cloudinary": "^1.40.0"
+  },
   "devDependencies": {
     "concurrently": "^8.2.2"
   },

@@ -1,5 +1,5 @@
 // Debug endpoint untuk troubleshooting
-require('dotenv').config();
+// Environment variables are automatically available in Vercel serverless functions
 
 export default async function handler(req, res) {
   // Enable CORS
