@@ -34,21 +34,25 @@ function Dashboard() {
       try {
         setLoading(true);
         
-        // Load user stats and recent generations
-        const [statsResponse, historyResponse] = await Promise.all([
-          api.get('/user/stats'),
-          api.get('/generate/history?limit=6')
+        // Load user profile and recent generations
+        const [userResponse, generationsResponse] = await Promise.all([
+          api.get('/user'),
+          api.get('/user/generations')
         ]);
 
-        setUserStats(statsResponse.data.stats || {
-          generationsUsed: 0,
-          generationLimit: 5,
-          totalGenerations: 0,
-          isPremium: false,
-          subscriptionStatus: 'free'
+        const userData = userResponse.data.user || {};
+        const generations = generationsResponse.data.generations || [];
+        
+        // Calculate stats from user data and generations
+        setUserStats({
+          generationsUsed: userData.generationsUsed || 0,
+          generationLimit: userData.generationLimit || 5,
+          totalGenerations: userData.totalGenerations || generations.length,
+          isPremium: userData.isPremium || false,
+          subscriptionStatus: userData.subscriptionStatus || 'free'
         });
         
-        setRecentGenerations(historyResponse.data.generations || []);
+        setRecentGenerations(generations.slice(0, 6));
         
       } catch (error) {
         console.error('Failed to load user data:', error);

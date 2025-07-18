@@ -161,16 +161,18 @@ export default async function handler(req, res) {
       // Continue with direct URL
     }
 
-    // Save to database (optional)
+    // Save to database and update user stats
     const generation = {
       id: `gen_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
       userId,
       type,
       prompt,
-      imageUrl: finalImageUrl,
+      generatedImageUrl: finalImageUrl, // Match frontend expectation
       thumbnailUrl: thumbnailUrl,
+      stylePreset: settings.stylePreset || null,
       settings,
       status: 'completed',
+      timestamp: new Date(), // Match frontend expectation
       createdAt: new Date(),
       completedAt: new Date()
     };
@@ -178,8 +180,39 @@ export default async function handler(req, res) {
     try {
       if (db) {
         console.log('💾 Saving to database...');
+        
+        // Save generation
         await db.collection('generations').doc(generation.id).set(generation);
-        console.log('✅ Database save successful');
+        console.log('✅ Generation saved to database');
+        
+        // Update user stats
+        console.log('📊 Updating user stats...');
+        const userRef = db.collection('users').doc(userId);
+        const userDoc = await userRef.get();
+        
+        let currentStats = {
+          generationsUsed: 0,
+          generationLimit: 5,
+          totalGenerations: 0,
+          isPremium: false
+        };
+        
+        if (userDoc.exists) {
+          currentStats = { ...currentStats, ...userDoc.data() };
+        }
+        
+        // Increment counters
+        const updatedStats = {
+          ...currentStats,
+          generationsUsed: (currentStats.generationsUsed || 0) + 1,
+          totalGenerations: (currentStats.totalGenerations || 0) + 1,
+          lastGenerationAt: new Date(),
+          updatedAt: new Date()
+        };
+        
+        await userRef.set(updatedStats, { merge: true });
+        console.log('✅ User stats updated:', updatedStats);
+        
       } else {
         console.log('⚠️ Database not available, skipping save');
       }

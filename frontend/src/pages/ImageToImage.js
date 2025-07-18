@@ -1,16 +1,17 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
-
 import PresetLibrary from '../components/PresetLibrary';
 import LazyImage from '../components/LazyImage';
 import SEOHead from '../components/SEOHead';
+import toast from 'react-hot-toast';
 
 const ImageToImage = () => {
+  const { currentUser } = useAuth();
   const fileInputRef = useRef(null);
   const [originalImage, setOriginalImage] = useState(null);
   const [prompt, setPrompt] = useState('');
-
   const [selectedPreset, setSelectedPreset] = useState(null);
   const [selectedModel, setSelectedModel] = useState('kontext');
   const [dimensions, setDimensions] = useState({ width: 512, height: 512 });
@@ -18,7 +19,30 @@ const ImageToImage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState(null);
   const [error, setError] = useState('');
+  const [userStats, setUserStats] = useState(null);
   const [generationsRemaining, setGenerationsRemaining] = useState(5);
+
+  // Load user stats on component mount
+  useEffect(() => {
+    const loadUserStats = async () => {
+      if (!currentUser) return;
+
+      try {
+        const response = await api.get('/user');
+        const userData = response.data.user || {};
+        
+        setUserStats(userData);
+        const remaining = Math.max(0, (userData.generationLimit || 5) - (userData.generationsUsed || 0));
+        setGenerationsRemaining(remaining);
+      } catch (error) {
+        console.error('Failed to load user stats:', error);
+        // Set defaults if API fails
+        setGenerationsRemaining(5);
+      }
+    };
+
+    loadUserStats();
+  }, [currentUser]);
 
   const availableModels = [
     { id: 'kontext', name: 'Kontext', description: 'Specialized for image-to-image transformations (seed tier)' }
@@ -83,6 +107,13 @@ const ImageToImage = () => {
   };
 
   const handleGenerate = async () => {
+    // Check generation limit first
+    if (generationsRemaining <= 0) {
+      toast.error('You have reached your generation limit. Please upgrade to continue.');
+      setError('Generation limit reached. Please upgrade your plan to continue generating images.');
+      return;
+    }
+
     if (!originalImage) {
       setError('Please upload an image first');
       return;
@@ -110,7 +141,8 @@ const ImageToImage = () => {
         settings: {
           model: selectedModel,
           width: dimensions.width,
-          height: dimensions.height
+          height: dimensions.height,
+          stylePreset: selectedPreset?.name || null
         },
         // Add preset information if available
         ...(selectedPreset && {
@@ -121,7 +153,7 @@ const ImageToImage = () => {
 
       if (response.data.success) {
         setGeneratedImage({
-          url: response.data.generation.imageUrl,
+          url: response.data.generation.generatedImageUrl || response.data.generation.imageUrl,
           prompt: finalPrompt,
           preset: selectedPreset,
           model: selectedModel,
@@ -129,14 +161,17 @@ const ImageToImage = () => {
           originalImage: originalImage.preview,
           generationId: response.data.generation.id
         });
-        // Keep current generations remaining for now
-        // setGenerationsRemaining(response.data.generationsRemaining);
+        
+        // Update remaining generations
+        setGenerationsRemaining(prev => Math.max(0, prev - 1));
+        toast.success('Image transformed successfully!');
       } else {
         setError(response.data.message || 'Generation failed');
       }
     } catch (error) {
       console.error('Generation error:', error);
       setError(error.response?.data?.message || 'Failed to generate image');
+      toast.error('Failed to transform image. Please try again.');
     } finally {
       setIsGenerating(false);
     }
