@@ -1,6 +1,6 @@
 // Environment variables are automatically available in Vercel serverless functions
 
-const { db, auth } = require('../backend/config/firebase');
+const { db, auth } = require('./_config/firebase');
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -84,7 +84,7 @@ export default async function handler(req, res) {
         // Always upload to Cloudinary to get a clean, short URL for Kontext model
         try {
           console.log('☁️ Uploading input image to Cloudinary for Kontext...');
-          const cloudinary = require('../backend/config/cloudinary');
+          const cloudinary = require('./_config/cloudinary');
           
           if (process.env.CLOUDINARY_CLOUD_NAME) {
             const uploadResult = await cloudinary.uploader.upload(imageUrl, {
@@ -191,7 +191,7 @@ export default async function handler(req, res) {
     
     try {
       console.log('☁️ Attempting Cloudinary upload...');
-      const cloudinary = require('../backend/config/cloudinary');
+      const cloudinary = require('./_config/cloudinary');
       
       if (process.env.CLOUDINARY_CLOUD_NAME) {
         const uploadResult = await cloudinary.uploader.upload(generatedImageUrl, {

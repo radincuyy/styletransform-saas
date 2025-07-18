@@ -1,6 +1,6 @@
 // Environment variables are automatically available in Vercel serverless functions
 
-const { auth } = require('../backend/config/firebase');
+const { auth } = require('./_config/firebase');
 
 export default async function handler(req, res) {
   // Enable CORS
