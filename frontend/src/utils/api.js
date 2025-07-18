@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: process.env.NODE_ENV === 'production' 
-    ? process.env.REACT_APP_API_URL 
+    ? '/api' // Use Vercel serverless functions
     : 'http://localhost:5000/api',
   timeout: 30000, // 30 seconds timeout for AI generation
 });

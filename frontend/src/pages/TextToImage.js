@@ -49,11 +49,14 @@ const TextToImage = () => {
     setGeneratedImage(null);
 
     try {
-      const response = await api.post('/generate/text-to-image', {
+      const response = await api.post('/generate', {
         prompt: finalPrompt,
-        model: model,
-        width: dimensions.width,
-        height: dimensions.height,
+        type: 'text-to-image',
+        settings: {
+          model: model,
+          width: dimensions.width,
+          height: dimensions.height
+        },
         // Add preset information if available
         ...(selectedPreset && {
           presetId: selectedPreset.id,
@@ -63,14 +66,15 @@ const TextToImage = () => {
 
       if (response.data.success) {
         setGeneratedImage({
-          url: response.data.generatedImageUrl,
+          url: response.data.generation.imageUrl,
           prompt: finalPrompt,
           preset: selectedPreset,
           model: model,
           dimensions: dimensions,
-          generationId: response.data.generationId
+          generationId: response.data.generation.id
         });
-        setGenerationsRemaining(response.data.generationsRemaining);
+        // Keep current generations remaining for now
+        // setGenerationsRemaining(response.data.generationsRemaining);
       } else {
         setError(response.data.message || 'Generation failed');
       }
