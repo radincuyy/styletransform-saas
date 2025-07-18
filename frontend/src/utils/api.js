@@ -56,27 +56,6 @@ api.interceptors.response.use(
   }
 );
 
-// API methods
-export const apiMethods = {
-  // Auth
-  verifyToken: () => api.post('/auth/verify'),
-  getProfile: () => api.get('/auth/profile'),
-  updateProfile: (data) => api.put('/auth/profile', data),
 
-  // Generation
-  generateImage: (formData) => api.post('/generate', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }),
-  getHistory: (params) => api.get('/generate/history', { params }),
-
-  // User
-  getStats: () => api.get('/user/stats'),
-  getUsage: () => api.get('/user/usage'),
-
-  // Payment
-  createCheckoutSession: (data) => api.post('/payment/create-checkout-session', data),
-  getSubscription: () => api.get('/payment/subscription'),
-  cancelSubscription: () => api.post('/payment/cancel-subscription'),
-};
 
 export default api;

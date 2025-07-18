@@ -104,33 +104,7 @@ function Dashboard() {
     setShowPricingModal(true);
   };
 
-  // Debug function to check generations
-  const debugGenerations = async () => {
-    try {
-      console.log('🔍 Debug: Checking generations...');
-      
-      // Test debug endpoint
-      const debugResponse = await api.get('/debug-generations');
-      console.log('🔍 Debug endpoint response:', debugResponse.data);
-      
-      // Test new generations endpoint
-      const generationsResponse = await api.get('/generations');
-      console.log('🔍 Generations endpoint response:', generationsResponse.data);
-      
-      // Test old user generations endpoint (should fail)
-      try {
-        const userGenResponse = await api.get('/user/generations');
-        console.log('🔍 User generations response:', userGenResponse.data);
-      } catch (userGenError) {
-        console.log('❌ User generations endpoint failed (expected):', userGenError.message);
-      }
-      
-      toast.success('Debug info logged to console. Check browser console (F12).');
-    } catch (error) {
-      console.error('❌ Debug error:', error);
-      toast.error('Debug failed. Check console for details.');
-    }
-  };
+
 
   if (loading) {
     return (
@@ -265,20 +239,12 @@ function Dashboard() {
                 <History className="h-6 w-6 mr-3 text-gray-600" />
                 Recent Generations
               </h2>
-              <div className="flex gap-2">
-                <button
-                  onClick={debugGenerations}
-                  className="bg-gray-500 text-white px-3 py-1 rounded text-xs hover:bg-gray-600 transition-colors"
-                >
-                  Debug
-                </button>
-                <Link
-                  to="/history"
-                  className="text-blue-500 hover:text-blue-600 font-medium text-sm"
-                >
-                  View All
-                </Link>
-              </div>
+              <Link
+                to="/history"
+                className="text-blue-500 hover:text-blue-600 font-medium text-sm"
+              >
+                View All
+              </Link>
             </div>
 
             {recentGenerations.length > 0 ? (
@@ -304,7 +270,37 @@ function Dashboard() {
                     <div className="space-y-2">
                       <div className="flex items-center text-sm text-gray-500">
                         <Calendar className="h-4 w-4 mr-1" />
-                        {new Date(generation.timestamp?.toDate ? generation.timestamp.toDate() : generation.timestamp).toLocaleDateString()}
+                        {(() => {
+                          try {
+                            // Handle different timestamp formats
+                            let date;
+                            if (generation.timestamp?.toDate) {
+                              // Firestore timestamp
+                              date = generation.timestamp.toDate();
+                            } else if (generation.timestamp) {
+                              // Regular timestamp or date string
+                              date = new Date(generation.timestamp);
+                            } else if (generation.createdAt?.toDate) {
+                              // Fallback to createdAt if timestamp not available
+                              date = generation.createdAt.toDate();
+                            } else if (generation.createdAt) {
+                              date = new Date(generation.createdAt);
+                            } else {
+                              // Final fallback
+                              date = new Date();
+                            }
+                            
+                            // Check if date is valid
+                            if (isNaN(date.getTime())) {
+                              return 'Recently';
+                            }
+                            
+                            return date.toLocaleDateString();
+                          } catch (error) {
+                            console.warn('Date parsing error:', error, generation);
+                            return 'Recently';
+                          }
+                        })()}
                       </div>
                       
                       {generation.type && (
