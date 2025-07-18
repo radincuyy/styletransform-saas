@@ -100,38 +100,37 @@ const ImageToImage = () => {
     setGeneratedImage(null);
 
     try {
-      const formData = new FormData();
-      formData.append('mainImage', originalImage.file);
-      formData.append('prompt', finalPrompt);
-      formData.append('model', selectedModel);
-      formData.append('width', dimensions.width.toString());
-      formData.append('height', dimensions.height.toString());
+      // Convert image to base64 for serverless function
+      const imageBase64 = originalImage.preview;
       
-      // Add preset information if available
-      if (selectedPreset) {
-        formData.append('presetId', selectedPreset.id);
-        formData.append('presetName', selectedPreset.name);
-      }
-      
-
-
-      const response = await api.post('/generate/image-to-image', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
+      const response = await api.post('/generate', {
+        prompt: finalPrompt,
+        type: 'image-to-image',
+        imageUrl: imageBase64,
+        settings: {
+          model: selectedModel,
+          width: dimensions.width,
+          height: dimensions.height
         },
+        // Add preset information if available
+        ...(selectedPreset && {
+          presetId: selectedPreset.id,
+          presetName: selectedPreset.name
+        })
       });
 
       if (response.data.success) {
         setGeneratedImage({
-          url: response.data.generatedImageUrl,
+          url: response.data.generation.imageUrl,
           prompt: finalPrompt,
           preset: selectedPreset,
           model: selectedModel,
           dimensions: dimensions,
           originalImage: originalImage.preview,
-          generationId: response.data.generationId
+          generationId: response.data.generation.id
         });
-        setGenerationsRemaining(response.data.generationsRemaining);
+        // Keep current generations remaining for now
+        // setGenerationsRemaining(response.data.generationsRemaining);
       } else {
         setError(response.data.message || 'Generation failed');
       }

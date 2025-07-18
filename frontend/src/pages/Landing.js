@@ -299,11 +299,10 @@ function Landing() {
                     <motion.div
                       whileHover={{ scale: 1.05, rotateX: -5 }}
                       whileTap={{ scale: 0.95 }}
-                      className="mt-4"
                     >
                       <Link
                         to="/login"
-                        className="px-8 py-4 border-2 border-white/30 text-white font-semibold rounded-2xl backdrop-blur-sm hover:bg-white/10 transition-all duration-300"
+                        className="px-8 py-4 border-2 border-white/30 text-white font-semibold rounded-2xl backdrop-blur-sm hover:bg-white/10 transition-all duration-300 flex items-center justify-center"
                       >
                         Sign In
                       </Link>
