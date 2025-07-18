@@ -104,6 +104,26 @@ function Dashboard() {
     setShowPricingModal(true);
   };
 
+  // Debug function to check generations
+  const debugGenerations = async () => {
+    try {
+      console.log('🔍 Debug: Checking generations...');
+      
+      // Test debug endpoint
+      const debugResponse = await api.get('/debug-generations');
+      console.log('🔍 Debug endpoint response:', debugResponse.data);
+      
+      // Test user generations endpoint
+      const userGenResponse = await api.get('/user/generations');
+      console.log('🔍 User generations response:', userGenResponse.data);
+      
+      toast.success('Debug info logged to console. Check browser console (F12).');
+    } catch (error) {
+      console.error('❌ Debug error:', error);
+      toast.error('Debug failed. Check console for details.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
@@ -237,12 +257,20 @@ function Dashboard() {
                 <History className="h-6 w-6 mr-3 text-gray-600" />
                 Recent Generations
               </h2>
-              <Link
-                to="/history"
-                className="text-blue-500 hover:text-blue-600 font-medium text-sm"
-              >
-                View All
-              </Link>
+              <div className="flex gap-2">
+                <button
+                  onClick={debugGenerations}
+                  className="bg-gray-500 text-white px-3 py-1 rounded text-xs hover:bg-gray-600 transition-colors"
+                >
+                  Debug
+                </button>
+                <Link
+                  to="/history"
+                  className="text-blue-500 hover:text-blue-600 font-medium text-sm"
+                >
+                  View All
+                </Link>
+              </div>
             </div>
 
             {recentGenerations.length > 0 ? (
