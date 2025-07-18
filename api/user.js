@@ -29,22 +29,53 @@ export default async function handler(req, res) {
       if (req.url.includes('/generations')) {
         // Get user generations
         if (!db) {
+          console.log('⚠️ Database not available for generations query');
           return res.status(200).json({ generations: [] });
         }
 
-        const generationsSnapshot = await db
-          .collection('generations')
-          .where('userId', '==', userId)
-          .orderBy('createdAt', 'desc')
-          .limit(50)
-          .get();
+        console.log('🔍 Querying generations for user:', userId);
+        
+        try {
+          // Try with orderBy first, fallback without orderBy if it fails
+          let generationsSnapshot;
+          try {
+            generationsSnapshot = await db
+              .collection('generations')
+              .where('userId', '==', userId)
+              .orderBy('createdAt', 'desc')
+              .limit(50)
+              .get();
+          } catch (orderError) {
+            console.warn('⚠️ OrderBy failed, trying without orderBy:', orderError.message);
+            // Fallback without orderBy (in case index doesn't exist)
+            generationsSnapshot = await db
+              .collection('generations')
+              .where('userId', '==', userId)
+              .limit(50)
+              .get();
+          }
 
-        const generations = [];
-        generationsSnapshot.forEach(doc => {
-          generations.push({ id: doc.id, ...doc.data() });
-        });
+          const generations = [];
+          generationsSnapshot.forEach(doc => {
+            const data = doc.data();
+            console.log('📄 Found generation:', doc.id, data.prompt?.substring(0, 50));
+            generations.push({ id: doc.id, ...data });
+          });
 
-        res.status(200).json({ generations });
+          console.log(`✅ Found ${generations.length} generations for user`);
+          
+          // Sort in memory if we couldn't sort in query
+          generations.sort((a, b) => {
+            const aTime = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+            const bTime = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+            return bTime - aTime;
+          });
+
+          res.status(200).json({ generations });
+        } catch (queryError) {
+          console.error('❌ Error querying generations:', queryError);
+          res.status(200).json({ generations: [] });
+        }
       } else {
         // Get user profile
         if (!db) {
