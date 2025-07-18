@@ -37,7 +37,7 @@ function Dashboard() {
         // Load user profile and recent generations
         const [userResponse, generationsResponse] = await Promise.all([
           api.get('/user'),
-          api.get('/user/generations')
+          api.get('/generations')
         ]);
 
         const userData = userResponse.data.user || {};
@@ -113,9 +113,17 @@ function Dashboard() {
       const debugResponse = await api.get('/debug-generations');
       console.log('🔍 Debug endpoint response:', debugResponse.data);
       
-      // Test user generations endpoint
-      const userGenResponse = await api.get('/user/generations');
-      console.log('🔍 User generations response:', userGenResponse.data);
+      // Test new generations endpoint
+      const generationsResponse = await api.get('/generations');
+      console.log('🔍 Generations endpoint response:', generationsResponse.data);
+      
+      // Test old user generations endpoint (should fail)
+      try {
+        const userGenResponse = await api.get('/user/generations');
+        console.log('🔍 User generations response:', userGenResponse.data);
+      } catch (userGenError) {
+        console.log('❌ User generations endpoint failed (expected):', userGenError.message);
+      }
       
       toast.success('Debug info logged to console. Check browser console (F12).');
     } catch (error) {
