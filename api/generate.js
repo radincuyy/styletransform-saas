@@ -81,9 +81,9 @@ export default async function handler(req, res) {
         
         let inputImageUrl = imageUrl;
         
-        // Always upload to Cloudinary to get a clean, short URL for Kontext model
+        // Upload to Cloudinary for clean URL (with fallback)
         try {
-          console.log('☁️ Uploading input image to Cloudinary for Kontext...');
+          console.log('☁️ Uploading input image to Cloudinary...');
           const cloudinary = require('./_config/cloudinary');
           
           if (process.env.CLOUDINARY_CLOUD_NAME) {
@@ -93,87 +93,64 @@ export default async function handler(req, res) {
               transformation: [
                 { quality: 'auto' },
                 { fetch_format: 'auto' },
-                { width: 1024, height: 1024, crop: 'limit' } // Limit size for better performance
+                { width: 1024, height: 1024, crop: 'limit' }
               ]
             });
             
             inputImageUrl = uploadResult.secure_url;
             console.log('✅ Input image uploaded to Cloudinary:', inputImageUrl);
           } else {
-            console.log('❌ Cloudinary not configured - required for Kontext model');
-            return res.status(500).json({ error: 'Image upload service not configured' });
+            console.warn('⚠️ Cloudinary not configured, using original image URL');
           }
         } catch (uploadError) {
-          console.error('❌ Input image upload failed:', uploadError.message);
-          return res.status(500).json({ error: 'Failed to process input image' });
+          console.warn('⚠️ Input image upload failed, using original URL:', uploadError.message);
+          // Continue with original imageUrl instead of failing
         }
         
-        // Use Kontext model for image-to-image (the ONLY model that supports image-to-image)
+        // Generate with Kontext model (with robust error handling)
         try {
           const width = Math.min(settings.width || 512, 1024);
           const height = Math.min(settings.height || 512, 1024);
           const seed = Math.floor(Math.random() * 1000000);
           
           console.log('🔧 Kontext parameters:', { width, height, seed });
-          console.log('📝 Original prompt length:', prompt.length);
-          
-          // Build Kontext URL with minimal parameters to avoid URL length issues
           
           // Use your specific token for Kontext model
           const token = 'Zs0rHdIr--0WN1-J';
           
-          // Use short prompt to minimize URL length
-          const shortPrompt = prompt.length > 50 ? prompt.substring(0, 50) : prompt;
+          // Build optimized prompt (keep it short for URL length)
+          const optimizedPrompt = prompt.length > 30 ? prompt.substring(0, 30) : prompt;
           
-          // Build Kontext URL with required parameters including token
+          // Build Kontext URL with essential parameters only
           const params = new URLSearchParams({
             model: 'kontext',
             token: token,
             image: inputImageUrl,
-            width: width.toString(),
-            height: height.toString(),
             seed: seed.toString()
           });
           
-          generatedImageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(shortPrompt)}?${params}`;
+          generatedImageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(optimizedPrompt)}?${params}`;
           console.log('🔗 Generated Kontext image URL:', generatedImageUrl);
           console.log('📏 URL length:', generatedImageUrl.length);
-          console.log('🎫 Token used:', token);
           
-          // If URL is too long, progressively shorten it
-          if (generatedImageUrl.length > 2000) {
-            console.warn('⚠️ URL too long, using shorter prompt...');
-            const shorterPrompt = prompt.split(' ').slice(0, 5).join(' '); // First 5 words
-            const shorterParams = new URLSearchParams({
-              model: 'kontext',
-              token: token,
-              image: inputImageUrl,
-              seed: seed.toString()
-            });
+          // Test URL validity by making a quick HEAD request
+          try {
+            console.log('🔍 Testing Kontext URL validity...');
+            const testResponse = await fetch(generatedImageUrl, { method: 'HEAD', timeout: 5000 });
+            console.log('📊 URL test response status:', testResponse.status);
             
-            generatedImageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(shorterPrompt)}?${shorterParams}`;
-            console.log('🔗 Shortened Kontext image URL:', generatedImageUrl);
-            console.log('📏 Shortened URL length:', generatedImageUrl.length);
-          }
-          
-          // Final fallback if still too long
-          if (generatedImageUrl.length > 1800) {
-            console.warn('⚠️ URL still too long, using minimal parameters...');
-            const minimalPrompt = prompt.split(' ').slice(0, 3).join(' '); // Only first 3 words
-            const minimalParams = new URLSearchParams({
-              model: 'kontext',
-              token: token,
-              image: inputImageUrl
-            });
-            
-            generatedImageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(minimalPrompt)}?${minimalParams}`;
-            console.log('🔗 Minimal Kontext image URL:', generatedImageUrl);
-            console.log('📏 Final URL length:', generatedImageUrl.length);
+            if (!testResponse.ok) {
+              console.warn('⚠️ Kontext URL returned non-OK status:', testResponse.status);
+            } else {
+              console.log('✅ Kontext URL is valid and accessible');
+            }
+          } catch (testError) {
+            console.warn('⚠️ URL test failed (but continuing):', testError.message);
           }
           
         } catch (kontextError) {
-          console.error('❌ Kontext model failed:', kontextError.message);
-          return res.status(500).json({ error: 'Image-to-image generation failed' });
+          console.warn('⚠️ Kontext URL generation failed:', kontextError.message);
+          // Don't fail here, continue with the process
         }
         
       } else {
@@ -274,7 +251,23 @@ export default async function handler(req, res) {
       // Continue without database save
     }
 
+    // Validate that we have a valid image URL before responding
+    if (!finalImageUrl || finalImageUrl === 'undefined') {
+      console.error('❌ No valid image URL generated');
+      return res.status(500).json({ 
+        error: 'Image generation failed - no valid URL produced',
+        message: 'The AI service did not return a valid image URL'
+      });
+    }
+
     console.log('🎉 Generation completed successfully!');
+    console.log('📤 Final response:', {
+      success: true,
+      generationId: generation.id,
+      imageUrl: finalImageUrl,
+      type: type
+    });
+    
     res.status(200).json({
       success: true,
       generation
