@@ -177,16 +177,7 @@ const ImageToImage = () => {
     }
   };
 
-  const handleDownload = () => {
-    if (!generatedImage) return;
 
-    const link = document.createElement('a');
-    link.href = generatedImage.url;
-    link.download = `image-to-image-${Date.now()}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
 
   const resetAll = () => {
     setOriginalImage(null);
@@ -196,6 +187,49 @@ const ImageToImage = () => {
     setError('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!generatedImage) return;
+
+    try {
+      toast.loading('Preparing download...', { id: 'download' });
+      
+      // Fetch the image as blob
+      const response = await fetch(generatedImage.url);
+      if (!response.ok) throw new Error('Failed to fetch image');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create download link
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Generate filename with timestamp and transformation info
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+      const transformSlug = generatedImage.prompt.slice(0, 30).replace(/[^a-zA-Z0-9]/g, '-');
+      const filename = `styletransform-img2img-${transformSlug}-${timestamp}.png`;
+      
+      link.download = filename;
+      link.style.display = 'none';
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Image downloaded successfully!', { id: 'download' });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Download failed. Opening image in new tab...', { id: 'download' });
+      
+      // Fallback: open in new tab
+      window.open(generatedImage.url, '_blank');
     }
   };
 
