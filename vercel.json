@@ -13,8 +13,29 @@
       "destination": "/api/$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!static|api|favicon.ico|manifest.json|robots.txt).*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "headers": [
+    {
+      "source": "/static/js/(.*)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        }
+      ]
+    },
+    {
+      "source": "/static/css/(.*)",
+      "headers": [
+        {
+          "key": "Content-Type", 
+          "value": "text/css; charset=utf-8"
+        }
+      ]
+    }
+  ],
+  "trailingSlash": false
 }
