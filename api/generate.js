@@ -133,21 +133,6 @@ export default async function handler(req, res) {
           console.log('🔗 Generated Kontext image URL:', generatedImageUrl);
           console.log('📏 URL length:', generatedImageUrl.length);
           
-          // Test URL validity by making a quick HEAD request
-          try {
-            console.log('🔍 Testing Kontext URL validity...');
-            const testResponse = await fetch(generatedImageUrl, { method: 'HEAD', timeout: 5000 });
-            console.log('📊 URL test response status:', testResponse.status);
-            
-            if (!testResponse.ok) {
-              console.warn('⚠️ Kontext URL returned non-OK status:', testResponse.status);
-            } else {
-              console.log('✅ Kontext URL is valid and accessible');
-            }
-          } catch (testError) {
-            console.warn('⚠️ URL test failed (but continuing):', testError.message);
-          }
-          
         } catch (kontextError) {
           console.warn('⚠️ Kontext URL generation failed:', kontextError.message);
           // Don't fail here, continue with the process
@@ -162,7 +147,13 @@ export default async function handler(req, res) {
       throw new Error(`Image generation failed: ${genError.message}`);
     }
 
-    // Try to upload to Cloudinary (optional)
+    // Wait a bit for Pollinations AI to process the image (especially for image-to-image)
+    if (type === 'image-to-image') {
+      console.log('⏳ Waiting for Kontext model to process...');
+      await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
+    }
+
+    // Try to upload to Cloudinary (optional but recommended for stability)
     let finalImageUrl = generatedImageUrl;
     let thumbnailUrl = generatedImageUrl;
     
@@ -171,18 +162,42 @@ export default async function handler(req, res) {
       const cloudinary = require('./_config/cloudinary');
       
       if (process.env.CLOUDINARY_CLOUD_NAME) {
-        const uploadResult = await cloudinary.uploader.upload(generatedImageUrl, {
-          folder: 'styletransform',
-          public_id: `${userId}_${Date.now()}`,
-          transformation: [
-            { quality: 'auto' },
-            { fetch_format: 'auto' }
-          ]
-        });
+        // For image-to-image, try multiple times as Pollinations might need time
+        let uploadAttempts = type === 'image-to-image' ? 3 : 1;
+        let uploadSuccess = false;
         
-        finalImageUrl = uploadResult.secure_url;
-        thumbnailUrl = uploadResult.secure_url.replace('/upload/', '/upload/w_300,h_300,c_fill/');
-        console.log('✅ Cloudinary upload successful:', finalImageUrl);
+        for (let attempt = 1; attempt <= uploadAttempts; attempt++) {
+          try {
+            console.log(`☁️ Upload attempt ${attempt}/${uploadAttempts}...`);
+            
+            const uploadResult = await cloudinary.uploader.upload(generatedImageUrl, {
+              folder: 'styletransform',
+              public_id: `${userId}_${Date.now()}_${attempt}`,
+              transformation: [
+                { quality: 'auto' },
+                { fetch_format: 'auto' }
+              ]
+            });
+            
+            finalImageUrl = uploadResult.secure_url;
+            thumbnailUrl = uploadResult.secure_url.replace('/upload/', '/upload/w_300,h_300,c_fill/');
+            console.log('✅ Cloudinary upload successful:', finalImageUrl);
+            uploadSuccess = true;
+            break;
+            
+          } catch (attemptError) {
+            console.warn(`⚠️ Upload attempt ${attempt} failed:`, attemptError.message);
+            if (attempt < uploadAttempts) {
+              console.log('⏳ Waiting before retry...');
+              await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+            }
+          }
+        }
+        
+        if (!uploadSuccess) {
+          console.warn('⚠️ All Cloudinary upload attempts failed, using direct URL');
+        }
+        
       } else {
         console.log('⚠️ Cloudinary not configured, using direct URL');
       }
@@ -252,11 +267,32 @@ export default async function handler(req, res) {
     }
 
     // Validate that we have a valid image URL before responding
-    if (!finalImageUrl || finalImageUrl === 'undefined') {
+    if (!finalImageUrl || finalImageUrl === 'undefined' || finalImageUrl === 'null') {
       console.error('❌ No valid image URL generated');
+      console.error('❌ finalImageUrl value:', finalImageUrl);
+      console.error('❌ generatedImageUrl value:', generatedImageUrl);
+      
       return res.status(500).json({ 
         error: 'Image generation failed - no valid URL produced',
-        message: 'The AI service did not return a valid image URL'
+        message: 'The AI service did not return a valid image URL',
+        debug: {
+          finalImageUrl: finalImageUrl,
+          generatedImageUrl: generatedImageUrl,
+          type: type
+        }
+      });
+    }
+
+    // Additional URL validation
+    try {
+      new URL(finalImageUrl);
+      console.log('✅ Final image URL is valid:', finalImageUrl);
+    } catch (urlError) {
+      console.error('❌ Invalid URL format:', finalImageUrl);
+      return res.status(500).json({ 
+        error: 'Image generation failed - invalid URL format',
+        message: 'Generated URL is not valid',
+        debug: { finalImageUrl: finalImageUrl }
       });
     }
 
